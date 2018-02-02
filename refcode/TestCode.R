@@ -1,4 +1,15 @@
-library(sf)
+source("R/AddCensusDemographics.R")
+
+api_key <-"d9174b06d5ec03a39d5f89f411614913e72556e6"
+map <- st_read("testing/data/raw/ArlingtonMA/ArlingtonMA_VoterPrecinct.shp")
+load("data/StateAndCountyFIPScodes2010.RData")
+state <- 25
+county <- c(17,19)
+
+MapWithDemographics <- AddCensusDemographics(map,api_key,state,county=NULL)
+
+st_write(MapWithDemographics,dsn="testing/data/output/",layer="MapWithDemographics")
+
 
 #read in precinct map
 dir.create("data/cache/")

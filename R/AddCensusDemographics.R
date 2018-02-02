@@ -14,10 +14,12 @@
 #   Test Package:              'Ctrl + Shift + T'
 
 library(sf)
+library(tidycensus)
+library(lwgeom)
 
 #This takes a shapefile, state (abbrevation, or FIPS code), and if desired a vector of county FIPS codes and
 #returns the same shapefile with Census Demographics attached
-AddCensusDemographics <- function(map,state,county=NULL){
+AddCensusDemographics <- function(map,api_key,state,county=NULL){
 
   #make sure the state is valid
   if(!((state%in%StateAndCountyFIPScodes2010$StateAbr)|(state%in%StateAndCountyFIPScodes2010$StateFIPS))){
@@ -31,10 +33,83 @@ AddCensusDemographics <- function(map,state,county=NULL){
     rm(states)
   }
 
+  #if county is null, get all counties for the state
   if(is.null(county)){
     county <- unique(StateAndCountyFIPScodes2010$CountyFIPS[StateAndCountyFIPScodes2010$StateFIPS==state])
   }else{
-
+    if(!(min(county%in%StateAndCountyFIPScodes2010$CountyFIPS[StateAndCountyFIPScodes2010$StateFIPS==state]))){
+      stop("Invalid County")
+    }
   }
 
+  demographicvars <- c(Pop18Plus = "P0100001",
+                       Pop18PlusWhite = "P0100003",
+                       Pop18PlusBlack = "P0100004",
+                       Pop18PlusAmInd = "P0100005",
+                       Pop18PlusAsian = "P0100006",
+                       Pop18PlusNativeHawPI = "P0100007",
+                       Pop18PlusHisp = "P0110002")
+
+  blkmap <- get_decennial(geography = "block", variables = demographicvars,
+                          state = state, county = county, geometry = TRUE,
+                          summary_var = NULL, output = "wide")
+
+  #get a copy of only the spatial data
+  blkmapFull <- blkmap
+  blkmap <- st_geometry(blkmap)
+  mapFull <- map
+  map <- st_geometry(map)
+
+  #put shapefile in same projection
+  map <- st_transform(map,st_crs(blkmap))
+
+  #which blocks intersect each precinct
+  #gIntersection and raster::intersection take way to long on everything
+  #it is much faster to just figure out what intersects at all, and then only intersect those
+  mapi <- st_intersects(map,blkmap,sparse = TRUE, prepared = TRUE)
+
+  intersected.blocks <- sort(unique(unlist(mapi)))
+
+  blkareas <- double(length(blkmap))
+  blkareas[] <- NA
+
+  #what is the area of each intersected block
+  blkareas[intersected.blocks] <- sapply(intersected.blocks,function(x){
+    st_area(blkmap[x])
+  })
+
+  #how much of each intersected block is within each precinct
+  percent.of.block.intersecting <- sapply(1:length(mapi),function(x){
+
+    percent.of.area.interescting <- sapply(mapi[[x]],function(y){
+      intersection <- suppressMessages(st_intersection(map[x],blkmap[y]))
+      #what is the area of the intersection
+      if(is.null(intersection)){
+        return(0)
+      }else{
+        return(st_area(intersection)/blkareas[y])
+      }
+    })
+  })
+
+  #get maps with the data again and remove backups
+  map <- mapFull
+  blkmap <- blkmapFull
+  rm(mapFull)
+  rm(blkmapFull)
+
+  blkmapdata <- dplyr::select(as.data.frame(blkmap), -geometry, -GEOID, -NAME)
+  blkmapdata <- as.matrix(blkmapdata)
+
+  #for each polygon add the portion (%of block area included in the precinct) of the population
+  #from each block to the precinct
+  temp <- apply(as.matrix(1:length(mapi)), MARGIN=1,  FUN=function(x){
+    percent.of.block.intersecting[[x]] %*% blkmapdata[mapi[[x]],]
+  })
+
+  #transpose to match
+  temp <- t(temp)
+  colnames(temp) <- colnames(blkmapdata)
+
+  return(cbind(map,temp))
 }
