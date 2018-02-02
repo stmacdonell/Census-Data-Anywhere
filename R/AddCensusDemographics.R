@@ -13,16 +13,26 @@
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
 
+library(sf)
 
-AddCensusDemographics <- function(map,State,County=NULL){
-  library(sf)
+#This takes a shapefile, state (abbrevation, or FIPS code), and if desired a vector of county FIPS codes and
+#returns the same shapefile with Census Demographics attached
+AddCensusDemographics <- function(map,state,county=NULL){
 
+  #make sure the state is valid
+  if(!((state%in%StateAndCountyFIPScodes2010$StateAbr)|(state%in%StateAndCountyFIPScodes2010$StateFIPS))){
+    stop("Invalid State")
+  }
 
-  if(State%in%)
+  #convert abbrevation to FIPS
+  if(state%in%StateAndCountyFIPScodes2010$StateAbr){
+    states <- unique(StateAndCountyFIPScodes2010[,1:2])
+    state <- states$StateFIPS[states$StateAbr==state]
+    rm(states)
+  }
 
-
-  if(is.null(County)){
-
+  if(is.null(county)){
+    county <- unique(StateAndCountyFIPScodes2010$CountyFIPS[StateAndCountyFIPScodes2010$StateFIPS==state])
   }else{
 
   }
