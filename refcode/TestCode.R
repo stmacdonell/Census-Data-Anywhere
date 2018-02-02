@@ -1,14 +1,26 @@
 library(sf)
-library(parallel)
-
 
 #read in precinct map
+dir.create("data/cache/")
+unzip("data/raw/PrecinctShapefiles/SBE_PRECINCTS_20120901.zip",exdir = "data/cache/")
 map <- st_read("data/cache/SBE_PRECINCTS_09012012.shp",stringsAsFactors = FALSE)
 
 #read in block map
+dir.create("data/cache/blkshape/")
+unzip("data/raw/NCblk/nhgis0022_shape.zip",exdir = "data/cache/blkshape/")
+unzip("data/cache/blkshape/nhgis0022_shape/nhgis0022_shapefile_tl2010_370_block_2010.zip",exdir = "data/cache/blkshape/")
 blkmap <- st_read("data/cache/blkshape/NC_block_2010.shp",stringsAsFactors = FALSE)
 
+####function starts below
+
+
 map <- st_transform(map,st_crs(blkmap))
+
+#get a copy of only the spatial data
+blkmapFull <- blkmap
+blkmap <- st_geometry(blkmap)
+mapFull <- map
+map <- st_geometry(map)
 
 # ##cleans things up
 # blkmap <- gBuffer(blkmap, byid = TRUE)
@@ -31,17 +43,16 @@ mapi <- st_intersects(map,blkmap,sparse = TRUE, prepared = TRUE)
 #save.image(file="data/cache/vtdmunge/intersected.RData")
 
 #what is the area of each block
-blkareas <- mclapply(1:length(blkmap),function(x){
-  st_area(blkmap[x,])
-},mc.cores = detectCores(logical = FALSE)-2)
-blkareas <- unlist(blkareas)
+blkareas <- sapply(1:length(blkmap),function(x){
+  st_area(st_geometry(blkmap[x]))
+})
 
 start <- proc.time()
 #how much of each intersected block is within each precinct
-percent.of.block.intersecting <- mclapply(1:length(map),function(x){
+percent.of.block.intersecting <- sapply(1:1000,function(x){
 
-  areas.of.interesction <- sapply(mapi[[x]],function(y){
-    intersection <- st_intersection(map[x,],blkmap[y,])
+  percent.of.area.interescting <- sapply(mapi[[x]],function(y){
+    intersection <- st_intersection(map[x],blkmap[y])
     #what is the area of the intersection
     if(is.null(intersection)){
       return(0)
@@ -49,16 +60,15 @@ percent.of.block.intersecting <- mclapply(1:length(map),function(x){
       return(st_area(intersection)/blkareas[y])
     }
   })
-
-},mc.cores=detectCores(logical=FALSE)-2)
+})
 end <- proc.time()
 end-start
 
 #dir.create("data/cache/vtdmunge")
 #save(percent.of.block.intersecting,file = "data/cache/vtdmunge/PercentOfBlocksIntersecting.RData")
 
-map <- readOGR(dsn = "data/cache/",layer = "SBE_PRECINCTS_09012012",stringsAsFactors = FALSE)
-blkmap <- readOGR(dsn = "data/cache/blkshape/",layer="NC_block_2010",stringsAsFactors = FALSE)
+map <- mapFull
+blkmap <- blkmapFull
 
 #read block data
 dir.create("data/cache/blkdata")
