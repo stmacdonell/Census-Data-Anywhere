@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<!-- saved from url=(0088)https://rstudio-pubs-static.s3.amazonaws.com/19337_2e7f827190514c569ea136db788ce850.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta http-equiv="x-ua-compatible" content="IE=9">
+
+<title>Automating data pulls from the US Census API</title>
+
+<style type="text/css">
+body, td {
+   font-family: sans-serif;
+   background-color: white;
+   font-size: 12px;
+   margin: 8px;
+}
+
+tt, code, pre {
+   font-family: 'DejaVu Sans Mono', 'Droid Sans Mono', 'Lucida Console', Consolas, Monaco, monospace;
+}
+
+h1 { 
+   font-size:2.2em; 
+}
+
+h2 { 
+   font-size:1.8em; 
+}
+
+h3 { 
+   font-size:1.4em; 
+}
+
+h4 { 
+   font-size:1.0em; 
+}
+
+h5 { 
+   font-size:0.9em; 
+}
+
+h6 { 
+   font-size:0.8em; 
+}
+
+a:visited {
+   color: rgb(50%, 0%, 50%);
+}
+
+pre {	
+   margin-top: 0;
+   max-width: 95%;
+   border: 1px solid #ccc;
+   white-space: pre-wrap;
+}
+
+pre code {
+   display: block; padding: 0.5em;
+}
+
+code.r, code.cpp {
+   background-color: #F8F8F8;
+}
+
+table, td, th {
+  border: none;
+}
+
+blockquote {
+   color:#666666;
+   margin:0;
+   padding-left: 1em;
+   border-left: 0.5em #EEE solid;
+}
+
+hr {
+   height: 0px;
+   border-bottom: none;
+   border-top-width: thin;
+   border-top-style: dotted;
+   border-top-color: #999999;
+}
+
+@media print {
+   * { 
+      background: transparent !important; 
+      color: black !important; 
+      filter:none !important; 
+      -ms-filter: none !important; 
+   }
+
+   body { 
+      font-size:12pt; 
+      max-width:100%; 
+   }
+       
+   a, a:visited { 
+      text-decoration: underline; 
+   }
+
+   hr { 
+      visibility: hidden;
+      page-break-before: always;
+   }
+
+   pre, blockquote { 
+      padding-right: 1em; 
+      page-break-inside: avoid; 
+   }
+
+   tr, img { 
+      page-break-inside: avoid; 
+   }
+
+   img { 
+      max-width: 100% !important; 
+   }
+
+   @page :left { 
+      margin: 15mm 20mm 15mm 10mm; 
+   }
+     
+   @page :right { 
+      margin: 15mm 10mm 15mm 20mm; 
+   }
+
+   p, h2, h3 { 
+      orphans: 3; widows: 3; 
+   }
+
+   h2, h3 { 
+      page-break-after: avoid; 
+   }
+}
+
+</style>
+
+<!-- Styles for R syntax highlighter -->
+<style type="text/css">
+   pre .operator,
+   pre .paren {
+     color: rgb(104, 118, 135)
+   }
+
+   pre .literal {
+     color: rgb(88, 72, 246)
+   }
+
+   pre .number {
+     color: rgb(0, 0, 205);
+   }
+
+   pre .comment {
+     color: rgb(76, 136, 107);
+   }
+
+   pre .keyword {
+     color: rgb(0, 0, 255);
+   }
+
+   pre .identifier {
+     color: rgb(0, 0, 0);
+   }
+
+   pre .string {
+     color: rgb(3, 106, 7);
+   }
+</style>
+
+<!-- R syntax highlighter -->
+<script type="text/javascript">
+var hljs=new function(){function m(p){return p.replace(/&/gm,"&amp;").replace(/</gm,"&lt;")}function f(r,q,p){return RegExp(q,"m"+(r.cI?"i":"")+(p?"g":""))}function b(r){for(var p=0;p<r.childNodes.length;p++){var q=r.childNodes[p];if(q.nodeName=="CODE"){return q}if(!(q.nodeType==3&&q.nodeValue.match(/\s+/))){break}}}function h(t,s){var p="";for(var r=0;r<t.childNodes.length;r++){if(t.childNodes[r].nodeType==3){var q=t.childNodes[r].nodeValue;if(s){q=q.replace(/\n/g,"")}p+=q}else{if(t.childNodes[r].nodeName=="BR"){p+="\n"}else{p+=h(t.childNodes[r])}}}if(/MSIE [678]/.test(navigator.userAgent)){p=p.replace(/\r/g,"\n")}return p}function a(s){var r=s.className.split(/\s+/);r=r.concat(s.parentNode.className.split(/\s+/));for(var q=0;q<r.length;q++){var p=r[q].replace(/^language-/,"");if(e[p]){return p}}}function c(q){var p=[];(function(s,t){for(var r=0;r<s.childNodes.length;r++){if(s.childNodes[r].nodeType==3){t+=s.childNodes[r].nodeValue.length}else{if(s.childNodes[r].nodeName=="BR"){t+=1}else{if(s.childNodes[r].nodeType==1){p.push({event:"start",offset:t,node:s.childNodes[r]});t=arguments.callee(s.childNodes[r],t);p.push({event:"stop",offset:t,node:s.childNodes[r]})}}}}return t})(q,0);return p}function k(y,w,x){var q=0;var z="";var s=[];function u(){if(y.length&&w.length){if(y[0].offset!=w[0].offset){return(y[0].offset<w[0].offset)?y:w}else{return w[0].event=="start"?y:w}}else{return y.length?y:w}}function t(D){var A="<"+D.nodeName.toLowerCase();for(var B=0;B<D.attributes.length;B++){var C=D.attributes[B];A+=" "+C.nodeName.toLowerCase();if(C.value!==undefined&&C.value!==false&&C.value!==null){A+='="'+m(C.value)+'"'}}return A+">"}while(y.length||w.length){var v=u().splice(0,1)[0];z+=m(x.substr(q,v.offset-q));q=v.offset;if(v.event=="start"){z+=t(v.node);s.push(v.node)}else{if(v.event=="stop"){var p,r=s.length;do{r--;p=s[r];z+=("</"+p.nodeName.toLowerCase()+">")}while(p!=v.node);s.splice(r,1);while(r<s.length){z+=t(s[r]);r++}}}}return z+m(x.substr(q))}function j(){function q(x,y,v){if(x.compiled){return}var u;var s=[];if(x.k){x.lR=f(y,x.l||hljs.IR,true);for(var w in x.k){if(!x.k.hasOwnProperty(w)){continue}if(x.k[w] instanceof Object){u=x.k[w]}else{u=x.k;w="keyword"}for(var r in u){if(!u.hasOwnProperty(r)){continue}x.k[r]=[w,u[r]];s.push(r)}}}if(!v){if(x.bWK){x.b="\\b("+s.join("|")+")\\s"}x.bR=f(y,x.b?x.b:"\\B|\\b");if(!x.e&&!x.eW){x.e="\\B|\\b"}if(x.e){x.eR=f(y,x.e)}}if(x.i){x.iR=f(y,x.i)}if(x.r===undefined){x.r=1}if(!x.c){x.c=[]}x.compiled=true;for(var t=0;t<x.c.length;t++){if(x.c[t]=="self"){x.c[t]=x}q(x.c[t],y,false)}if(x.starts){q(x.starts,y,false)}}for(var p in e){if(!e.hasOwnProperty(p)){continue}q(e[p].dM,e[p],true)}}function d(B,C){if(!j.called){j();j.called=true}function q(r,M){for(var L=0;L<M.c.length;L++){if((M.c[L].bR.exec(r)||[null])[0]==r){return M.c[L]}}}function v(L,r){if(D[L].e&&D[L].eR.test(r)){return 1}if(D[L].eW){var M=v(L-1,r);return M?M+1:0}return 0}function w(r,L){return L.i&&L.iR.test(r)}function K(N,O){var M=[];for(var L=0;L<N.c.length;L++){M.push(N.c[L].b)}var r=D.length-1;do{if(D[r].e){M.push(D[r].e)}r--}while(D[r+1].eW);if(N.i){M.push(N.i)}return f(O,M.join("|"),true)}function p(M,L){var N=D[D.length-1];if(!N.t){N.t=K(N,E)}N.t.lastIndex=L;var r=N.t.exec(M);return r?[M.substr(L,r.index-L),r[0],false]:[M.substr(L),"",true]}function z(N,r){var L=E.cI?r[0].toLowerCase():r[0];var M=N.k[L];if(M&&M instanceof Array){return M}return false}function F(L,P){L=m(L);if(!P.k){return L}var r="";var O=0;P.lR.lastIndex=0;var M=P.lR.exec(L);while(M){r+=L.substr(O,M.index-O);var N=z(P,M);if(N){x+=N[1];r+='<span class="'+N[0]+'">'+M[0]+"</span>"}else{r+=M[0]}O=P.lR.lastIndex;M=P.lR.exec(L)}return r+L.substr(O,L.length-O)}function J(L,M){if(M.sL&&e[M.sL]){var r=d(M.sL,L);x+=r.keyword_count;return r.value}else{return F(L,M)}}function I(M,r){var L=M.cN?'<span class="'+M.cN+'">':"";if(M.rB){y+=L;M.buffer=""}else{if(M.eB){y+=m(r)+L;M.buffer=""}else{y+=L;M.buffer=r}}D.push(M);A+=M.r}function G(N,M,Q){var R=D[D.length-1];if(Q){y+=J(R.buffer+N,R);return false}var P=q(M,R);if(P){y+=J(R.buffer+N,R);I(P,M);return P.rB}var L=v(D.length-1,M);if(L){var O=R.cN?"</span>":"";if(R.rE){y+=J(R.buffer+N,R)+O}else{if(R.eE){y+=J(R.buffer+N,R)+O+m(M)}else{y+=J(R.buffer+N+M,R)+O}}while(L>1){O=D[D.length-2].cN?"</span>":"";y+=O;L--;D.length--}var r=D[D.length-1];D.length--;D[D.length-1].buffer="";if(r.starts){I(r.starts,"")}return R.rE}if(w(M,R)){throw"Illegal"}}var E=e[B];var D=[E.dM];var A=0;var x=0;var y="";try{var s,u=0;E.dM.buffer="";do{s=p(C,u);var t=G(s[0],s[1],s[2]);u+=s[0].length;if(!t){u+=s[1].length}}while(!s[2]);if(D.length>1){throw"Illegal"}return{r:A,keyword_count:x,value:y}}catch(H){if(H=="Illegal"){return{r:0,keyword_count:0,value:m(C)}}else{throw H}}}function g(t){var p={keyword_count:0,r:0,value:m(t)};var r=p;for(var q in e){if(!e.hasOwnProperty(q)){continue}var s=d(q,t);s.language=q;if(s.keyword_count+s.r>r.keyword_count+r.r){r=s}if(s.keyword_count+s.r>p.keyword_count+p.r){r=p;p=s}}if(r.language){p.second_best=r}return p}function i(r,q,p){if(q){r=r.replace(/^((<[^>]+>|\t)+)/gm,function(t,w,v,u){return w.replace(/\t/g,q)})}if(p){r=r.replace(/\n/g,"<br>")}return r}function n(t,w,r){var x=h(t,r);var v=a(t);var y,s;if(v){y=d(v,x)}else{return}var q=c(t);if(q.length){s=document.createElement("pre");s.innerHTML=y.value;y.value=k(q,c(s),x)}y.value=i(y.value,w,r);var u=t.className;if(!u.match("(\\s|^)(language-)?"+v+"(\\s|$)")){u=u?(u+" "+v):v}if(/MSIE [678]/.test(navigator.userAgent)&&t.tagName=="CODE"&&t.parentNode.tagName=="PRE"){s=t.parentNode;var p=document.createElement("div");p.innerHTML="<pre><code>"+y.value+"</code></pre>";t=p.firstChild.firstChild;p.firstChild.cN=s.cN;s.parentNode.replaceChild(p.firstChild,s)}else{t.innerHTML=y.value}t.className=u;t.result={language:v,kw:y.keyword_count,re:y.r};if(y.second_best){t.second_best={language:y.second_best.language,kw:y.second_best.keyword_count,re:y.second_best.r}}}function o(){if(o.called){return}o.called=true;var r=document.getElementsByTagName("pre");for(var p=0;p<r.length;p++){var q=b(r[p]);if(q){n(q,hljs.tabReplace)}}}function l(){if(window.addEventListener){window.addEventListener("DOMContentLoaded",o,false);window.addEventListener("load",o,false)}else{if(window.attachEvent){window.attachEvent("onload",o)}else{window.onload=o}}}var e={};this.LANGUAGES=e;this.highlight=d;this.highlightAuto=g;this.fixMarkup=i;this.highlightBlock=n;this.initHighlighting=o;this.initHighlightingOnLoad=l;this.IR="[a-zA-Z][a-zA-Z0-9_]*";this.UIR="[a-zA-Z_][a-zA-Z0-9_]*";this.NR="\\b\\d+(\\.\\d+)?";this.CNR="\\b(0[xX][a-fA-F0-9]+|(\\d+(\\.\\d*)?|\\.\\d+)([eE][-+]?\\d+)?)";this.BNR="\\b(0b[01]+)";this.RSR="!|!=|!==|%|%=|&|&&|&=|\\*|\\*=|\\+|\\+=|,|\\.|-|-=|/|/=|:|;|<|<<|<<=|<=|=|==|===|>|>=|>>|>>=|>>>|>>>=|\\?|\\[|\\{|\\(|\\^|\\^=|\\||\\|=|\\|\\||~";this.ER="(?![\\s\\S])";this.BE={b:"\\\\.",r:0};this.ASM={cN:"string",b:"'",e:"'",i:"\\n",c:[this.BE],r:0};this.QSM={cN:"string",b:'"',e:'"',i:"\\n",c:[this.BE],r:0};this.CLCM={cN:"comment",b:"//",e:"$"};this.CBLCLM={cN:"comment",b:"/\\*",e:"\\*/"};this.HCM={cN:"comment",b:"#",e:"$"};this.NM={cN:"number",b:this.NR,r:0};this.CNM={cN:"number",b:this.CNR,r:0};this.BNM={cN:"number",b:this.BNR,r:0};this.inherit=function(r,s){var p={};for(var q in r){p[q]=r[q]}if(s){for(var q in s){p[q]=s[q]}}return p}}();hljs.LANGUAGES.cpp=function(){var a={keyword:{"false":1,"int":1,"float":1,"while":1,"private":1,"char":1,"catch":1,"export":1,virtual:1,operator:2,sizeof:2,dynamic_cast:2,typedef:2,const_cast:2,"const":1,struct:1,"for":1,static_cast:2,union:1,namespace:1,unsigned:1,"long":1,"throw":1,"volatile":2,"static":1,"protected":1,bool:1,template:1,mutable:1,"if":1,"public":1,friend:2,"do":1,"return":1,"goto":1,auto:1,"void":2,"enum":1,"else":1,"break":1,"new":1,extern:1,using:1,"true":1,"class":1,asm:1,"case":1,typeid:1,"short":1,reinterpret_cast:2,"default":1,"double":1,register:1,explicit:1,signed:1,typename:1,"try":1,"this":1,"switch":1,"continue":1,wchar_t:1,inline:1,"delete":1,alignof:1,char16_t:1,char32_t:1,constexpr:1,decltype:1,noexcept:1,nullptr:1,static_assert:1,thread_local:1,restrict:1,_Bool:1,complex:1},built_in:{std:1,string:1,cin:1,cout:1,cerr:1,clog:1,stringstream:1,istringstream:1,ostringstream:1,auto_ptr:1,deque:1,list:1,queue:1,stack:1,vector:1,map:1,set:1,bitset:1,multiset:1,multimap:1,unordered_set:1,unordered_map:1,unordered_multiset:1,unordered_multimap:1,array:1,shared_ptr:1}};return{dM:{k:a,i:"</",c:[hljs.CLCM,hljs.CBLCLM,hljs.QSM,{cN:"string",b:"'\\\\?.",e:"'",i:"."},{cN:"number",b:"\\b(\\d+(\\.\\d*)?|\\.\\d+)(u|U|l|L|ul|UL|f|F)"},hljs.CNM,{cN:"preprocessor",b:"#",e:"$"},{cN:"stl_container",b:"\\b(deque|list|queue|stack|vector|map|set|bitset|multiset|multimap|unordered_map|unordered_set|unordered_multiset|unordered_multimap|array)\\s*<",e:">",k:a,r:10,c:["self"]}]}}}();hljs.LANGUAGES.r={dM:{c:[hljs.HCM,{cN:"number",b:"\\b0[xX][0-9a-fA-F]+[Li]?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+(?:[eE][+\\-]?\\d*)?L\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\b\\d+\\.(?!\\d)(?:i\\b)?",e:hljs.IMMEDIATE_RE,r:1},{cN:"number",b:"\\b\\d+(?:\\.\\d*)?(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"number",b:"\\.\\d+(?:[eE][+\\-]?\\d*)?i?\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"keyword",b:"(?:tryCatch|library|setGeneric|setGroupGeneric)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\.",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\.\\.\\d+(?![\\w.])",e:hljs.IMMEDIATE_RE,r:10},{cN:"keyword",b:"\\b(?:function)",e:hljs.IMMEDIATE_RE,r:2},{cN:"keyword",b:"(?:if|in|break|next|repeat|else|for|return|switch|while|try|stop|warning|require|attach|detach|source|setMethod|setClass)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"literal",b:"(?:NA|NA_integer_|NA_real_|NA_character_|NA_complex_)\\b",e:hljs.IMMEDIATE_RE,r:10},{cN:"literal",b:"(?:NULL|TRUE|FALSE|T|F|Inf|NaN)\\b",e:hljs.IMMEDIATE_RE,r:1},{cN:"identifier",b:"[a-zA-Z.][a-zA-Z0-9._]*\\b",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"<\\-(?!\\s*\\d)",e:hljs.IMMEDIATE_RE,r:2},{cN:"operator",b:"\\->|<\\-",e:hljs.IMMEDIATE_RE,r:1},{cN:"operator",b:"%%|~",e:hljs.IMMEDIATE_RE},{cN:"operator",b:">=|<=|==|!=|\\|\\||&&|=|\\+|\\-|\\*|/|\\^|>|<|!|&|\\||\\$|:",e:hljs.IMMEDIATE_RE,r:0},{cN:"operator",b:"%",e:"%",i:"\\n",r:1},{cN:"identifier",b:"`",e:"`",r:0},{cN:"string",b:'"',e:'"',c:[hljs.BE],r:0},{cN:"string",b:"'",e:"'",c:[hljs.BE],r:0},{cN:"paren",b:"[[({\\])}]",e:hljs.IMMEDIATE_RE,r:0}]}};
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+</head>
+
+<body>
+<h1>Automating data pulls from the US Census API</h1>
+
+<h2>Introduction to the API</h2>
+
+<p>The US census has an API that allows you to download data via a webbrowser.
+Here is an example that returns all Census 2010 population counts for zip code tabulation areas in Alaska:</p>
+
+<p><a href="http://api.census.gov/data/2010/sf1?key=%7Benter">http://api.census.gov/data/2010/sf1?key={enter</a> key here}&amp;get=P0010001,P0040003&amp;for=zip+code+tabulation+area:*&amp;in=state:02</p>
+
+<p>###Components of the url</p>
+
+<ol>
+<li>A url root describing the dataset to be queried.  In the example, that is <a href="http://api.census.gov/data/2010/sf1?">http://api.census.gov/data/2010/sf1?</a>' which indicates data from the 2010 Census, Summary File 1.</li>
+<li>The user's API key.  Every user must have their own key.  I didn't enter my key in the example.  You'll have to request you're own.  You can request a key <a href="http://www.census.gov/developers/tos/key_request.html">here</a>.</li>
+<li>The variables that will be requested.  In this case, that is indicated by <code>get=P0010001,P0040003</code>, indicating variables <code>P0010001</code> (Total Population) and <code>P004003</code> (Hispanic or Latino Population).  There is a limit of 50 variables that can be requested at one time.</li>
+<li><p>The geographic region to pull data for.  Here that is <code>for=zip+code+tabulation+area:*&amp;in=state:02</code> which indicates pull data for zip code tabulation areas (ZCTA), <code>:*</code>  indicates for all, <code>in=state:02</code> indicates in state 02 (which is Alaska).  Another example would be <code>for=block:*&amp;in=state:02+county:290+tract:00100</code> indicating all blocks in tract 00100 in county 290 in state 02 (Alaska).</p>
+
+<p>You can find all kinds of examples on the left hand side of <a href="http://www.census.gov/developers/data/">this page</a>.</p></li>
+</ol>
+
+<h2>The R code</h2>
+
+<h3>What can't be simplified</h3>
+
+<p>There are a number of obstacles to using data from the API.  One obstacle for some people will be that the API requires a solid understanding of census questions and geographies.  For example, the user must know the proper codes for the data they want (e.g. knowing that population is <code>P0010001</code>.  I don't see a solution to that, other than the user becoming familiar with the data documentation.  Another obstacle is that the user must understand basic census geographies and fips codes, such as state-county-tract-block group-block.  Again, I don't see an easy solution to this other than reading the documentation.</p>
+
+<h3>What can be simplified with R?</h3>
+
+<p>There are two things that can be mostly simplified with R, and these revolve around the limitations of the API itself.  The first limitation is that you can only extract 50 variables at a time.  We can fix that in R.  The second limitation is that there are only certain geography combinations you can query at once.  For example, you <em>can</em> query every block group in a tract, but you <em>cannot</em> query every block group in a county.  If you want to query every block group in a county, then you need to first loop through all the tracts in the county, and construct a block group query for each tract.  R can help us to automate this procedure.  A third limitation of the url is that it returns an html page, it takes some massaging to get that into a usable dataset.</p>
+
+<h4>Description of R functions:</h4>
+
+<p>I have included here two R functions:</p>
+
+<ul>
+<li><code>getCensusApi</code> assembles the url components into a single url, then sends that request to the Census server, and converts the return into an R data.frame.  It automatically deals with the situation when you want more than 50 variables.</li>
+<li><code>getCensusApi2</code> The user should not need this.  The user should work with <code>getCensusApi</code>, which is a wrapper for this.  <code>getCensusApi2</code> assembles the url components and sends the request to the Census server.  <code>getCensusApi2</code> does not deal with more than 50 variables.<br></li>
+<li><code>vecToChunk</code>  takes a list of variable names, and collects them into chunks with no more than 50 variables.  Again, the user shouldn't have to worry about this if they use getCensusApi.  This helps to get around requests you may have that require more than 50 variables, when the API only allows you to query 50 variables at a time. The user shouldn't need to call this directly.</li>
+</ul>
+
+<pre><code class="r"><span class="comment"># getCensusApi</span>
+<span class="comment"># get Census data via the public API: loop through variables if needed</span>
+<span class="comment"># Inputs:</span>
+<span class="comment">#   data_url: the url root of the api, including the '?'</span>
+<span class="comment">#     example: http://api.census.gov/data/2010/sf1?</span>
+<span class="comment">#   key: your API key</span>
+<span class="comment">#   vars: a character vector of variables to get.</span>
+<span class="comment">#     example c("H0110001","H0110002","H0110003")</span>
+<span class="comment">#     If there are more than 50, then it will be automatically split into separate queries.</span>
+<span class="comment">#   region: region to get data for.  contains a for:, and possibly an in:</span>
+<span class="comment">#     example: for=block:1213&amp;in=state:47+county:015+tract:*</span>
+<span class="comment"># Output:</span>
+<span class="comment">#   If successful, a data.frame</span>
+<span class="comment">#   If unsuccessful, prints the url query that caused the error.</span>
+<span class="identifier">getCensusApi</span> <span class="operator">&lt;-</span> <span class="keyword">function</span><span class="paren">(</span><span class="identifier">data_url</span>,<span class="identifier">key</span>, <span class="identifier">vars</span>, <span class="identifier">region</span>, <span class="identifier">numeric</span><span class="operator">=</span><span class="literal">TRUE</span><span class="paren">)</span><span class="paren">{</span>
+  <span class="keyword">if</span><span class="paren">(</span><span class="identifier">length</span><span class="paren">(</span><span class="identifier">vars</span><span class="paren">)</span><span class="operator">&gt;</span><span class="number">50</span><span class="paren">)</span><span class="paren">{</span>
+    <span class="identifier">vars</span> <span class="operator">&lt;-</span> <span class="identifier">vecToChunk</span><span class="paren">(</span><span class="identifier">vars</span><span class="paren">)</span> <span class="comment"># Split vars into a list</span>
+    <span class="identifier">get</span> <span class="operator">&lt;-</span> <span class="identifier">lapply</span><span class="paren">(</span><span class="identifier">vars</span>, <span class="keyword">function</span><span class="paren">(</span><span class="identifier">x</span><span class="paren">)</span> <span class="identifier">paste</span><span class="paren">(</span><span class="identifier">x</span>, <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span>, <span class="identifier">collapse</span><span class="operator">=</span><span class="string">","</span><span class="paren">)</span><span class="paren">)</span>
+    <span class="identifier">data</span> <span class="operator">&lt;-</span> <span class="identifier">lapply</span><span class="paren">(</span><span class="identifier">vars</span>, <span class="keyword">function</span><span class="paren">(</span><span class="identifier">x</span><span class="paren">)</span> <span class="identifier">getCensusApi2</span><span class="paren">(</span><span class="identifier">data_url</span>,<span class="identifier">key</span>, <span class="identifier">x</span>, <span class="identifier">region</span>, <span class="identifier">numeric</span><span class="operator">=</span><span class="literal">TRUE</span><span class="paren">)</span><span class="paren">)</span>
+    <span class="paren">}</span> <span class="keyword">else</span> <span class="paren">{</span>
+      <span class="identifier">get</span> <span class="operator">&lt;-</span> <span class="identifier">paste</span><span class="paren">(</span><span class="identifier">vars</span>, <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span>, <span class="identifier">collapse</span><span class="operator">=</span><span class="string">','</span><span class="paren">)</span>
+      <span class="identifier">data</span> <span class="operator">&lt;-</span> <span class="identifier">list</span><span class="paren">(</span><span class="identifier">getCensusApi2</span><span class="paren">(</span><span class="identifier">data_url</span>,<span class="identifier">key</span>, <span class="identifier">get</span>, <span class="identifier">region</span>, <span class="identifier">numeric</span><span class="operator">=</span><span class="literal">TRUE</span><span class="paren">)</span><span class="paren">)</span>
+      <span class="paren">}</span>
+  <span class="comment"># Format output.  If there were no errors, than paste the data together</span>
+  <span class="comment"># If there is an error, just return the unformatted list.</span>
+  <span class="keyword">if</span><span class="paren">(</span><span class="identifier">all</span><span class="paren">(</span><span class="identifier">sapply</span><span class="paren">(</span><span class="identifier">data</span>, <span class="identifier">is.data.frame</span><span class="paren">)</span><span class="paren">)</span><span class="paren">)</span><span class="paren">{</span>
+    <span class="identifier">colnames</span> <span class="operator">&lt;-</span> <span class="identifier">unlist</span><span class="paren">(</span><span class="identifier">lapply</span><span class="paren">(</span><span class="identifier">data</span>, <span class="identifier">names</span><span class="paren">)</span><span class="paren">)</span>
+    <span class="identifier">data</span> <span class="operator">&lt;-</span> <span class="identifier">do.call</span><span class="paren">(</span><span class="identifier">cbind</span>,<span class="identifier">data</span><span class="paren">)</span>
+    <span class="identifier">names</span><span class="paren">(</span><span class="identifier">data</span><span class="paren">)</span> <span class="operator">&lt;-</span> <span class="identifier">colnames</span>
+    <span class="comment"># Prettify the output</span>
+    <span class="comment"># If there are nonunique colums, remove them</span>
+    <span class="identifier">data</span> <span class="operator">&lt;-</span> <span class="identifier">data</span><span class="paren">[</span>,<span class="identifier">unique</span><span class="paren">(</span><span class="identifier">colnames</span>, <span class="identifier">fromLast</span><span class="operator">=</span><span class="literal">TRUE</span><span class="paren">)</span><span class="paren">]</span>
+    <span class="comment"># Reorder columns so that numeric fields follow non-numeric fields</span>
+    <span class="identifier">data</span> <span class="operator">&lt;-</span> <span class="identifier">data</span><span class="paren">[</span>,<span class="identifier">c</span><span class="paren">(</span><span class="identifier">which</span><span class="paren">(</span><span class="identifier">sapply</span><span class="paren">(</span><span class="identifier">data</span>, <span class="identifier">class</span><span class="paren">)</span><span class="operator">!=</span><span class="string">'numeric'</span><span class="paren">)</span>, <span class="identifier">which</span><span class="paren">(</span><span class="identifier">sapply</span><span class="paren">(</span><span class="identifier">data</span>, <span class="identifier">class</span><span class="paren">)</span><span class="operator">==</span><span class="string">'numeric'</span><span class="paren">)</span><span class="paren">)</span><span class="paren">]</span>
+    <span class="keyword">return</span><span class="paren">(</span><span class="identifier">data</span><span class="paren">)</span>
+  <span class="paren">}</span><span class="keyword">else</span><span class="paren">{</span>
+    <span class="identifier">print</span><span class="paren">(</span><span class="string">'unable to create single data.frame in getCensusApi'</span><span class="paren">)</span>
+    <span class="keyword">return</span><span class="paren">(</span><span class="identifier">data</span><span class="paren">)</span>
+    <span class="paren">}</span>
+<span class="paren">}</span>
+
+
+<span class="comment"># getCensusApi2 </span>
+<span class="comment"># get Census data via the public API using a single query</span>
+<span class="comment"># Inputs:</span>
+<span class="comment">#   data_url: the url root of the api, including the '?'</span>
+<span class="comment">#     example: http://api.census.gov/data/2010/sf1?</span>
+<span class="comment">#   key: your API key</span>
+<span class="comment">#   get: The variables to get. Separate multiple variables by commas.</span>
+<span class="comment">#     example 'H0110001,H0110002,H0110003'</span>
+<span class="comment">#   region: region to get data for.  contains a for:, and possibly an in:</span>
+<span class="comment">#     example: for=block:1213&amp;in=state:47+county:015+tract:*</span>
+<span class="comment"># Output:</span>
+<span class="comment">#   If successful, a data.frame</span>
+<span class="comment">#   If unsuccessful, prints the url query that was constructed.</span>
+<span class="identifier">getCensusApi2</span> <span class="operator">&lt;-</span> <span class="keyword">function</span><span class="paren">(</span><span class="identifier">data_url</span>,<span class="identifier">key</span>, <span class="identifier">get</span>, <span class="identifier">region</span>, <span class="identifier">numeric</span><span class="operator">=</span><span class="literal">TRUE</span><span class="paren">)</span><span class="paren">{</span>
+  <span class="keyword">if</span><span class="paren">(</span><span class="identifier">length</span><span class="paren">(</span><span class="identifier">get</span><span class="paren">)</span><span class="operator">&gt;</span><span class="number">1</span><span class="paren">)</span> <span class="identifier">get</span> <span class="operator">&lt;-</span> <span class="identifier">paste</span><span class="paren">(</span><span class="identifier">get</span>, <span class="identifier">collapse</span><span class="operator">=</span><span class="string">','</span>, <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span><span class="paren">)</span>
+  <span class="identifier">api_call</span> <span class="operator">&lt;-</span> <span class="identifier">paste</span><span class="paren">(</span><span class="identifier">data_url</span>, 
+                    <span class="string">'key='</span>, <span class="identifier">key</span>, 
+                    <span class="string">'&amp;get='</span>, <span class="identifier">get</span>,
+                    <span class="string">'&amp;'</span>, <span class="identifier">region</span>,
+                    <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span><span class="paren">)</span>
+
+  <span class="identifier">dat_raw</span> <span class="operator">&lt;-</span> <span class="keyword">try</span><span class="paren">(</span><span class="identifier">readLines</span><span class="paren">(</span><span class="identifier">api_call</span>, <span class="identifier">warn</span><span class="operator">=</span><span class="string">"F"</span><span class="paren">)</span><span class="paren">)</span>
+  <span class="keyword">if</span><span class="paren">(</span><span class="identifier">class</span><span class="paren">(</span><span class="identifier">dat_raw</span><span class="paren">)</span><span class="operator">==</span><span class="string">'try-error'</span><span class="paren">)</span> <span class="paren">{</span>
+    <span class="identifier">print</span><span class="paren">(</span><span class="identifier">api_call</span><span class="paren">)</span>
+    <span class="keyword">return</span><span class="paren">}</span>
+  <span class="identifier">dat_df</span> <span class="operator">&lt;-</span> <span class="identifier">data.frame</span><span class="paren">(</span><span class="paren">)</span>
+
+  <span class="comment">#split the datastream into a list with each row as an element</span>
+  <span class="comment"># Thanks to roodmichael on github</span>
+  <span class="identifier">tmp</span> <span class="operator">&lt;-</span> <span class="identifier">strsplit</span><span class="paren">(</span><span class="identifier">gsub</span><span class="paren">(</span><span class="string">"[^[:alnum:], _]"</span>, <span class="string">''</span>, <span class="identifier">dat_raw</span><span class="paren">)</span>, <span class="string">"\\,"</span><span class="paren">)</span>
+  <span class="comment">#dat_df &lt;- rbind(dat_df, t(sapply(tmp, '[')))</span>
+  <span class="comment">#names(dat_df) &lt;- sapply(dat_df[1,], as.character)</span>
+  <span class="comment">#dat_df &lt;- dat_df[-1,]</span>
+  <span class="identifier">dat_df</span> <span class="operator">&lt;-</span> <span class="identifier">as.data.frame</span><span class="paren">(</span><span class="identifier">do.call</span><span class="paren">(</span><span class="identifier">rbind</span>, <span class="identifier">tmp</span><span class="paren">[</span><span class="operator">-</span><span class="number">1</span><span class="paren">]</span><span class="paren">)</span>, <span class="identifier">stringsAsFactors</span><span class="operator">=</span><span class="literal">FALSE</span><span class="paren">)</span>
+  <span class="identifier">names</span><span class="paren">(</span><span class="identifier">dat_df</span><span class="paren">)</span> <span class="operator">&lt;-</span> <span class="identifier">tmp</span><span class="paren">[</span><span class="paren">[</span><span class="number">1</span><span class="paren">]</span><span class="paren">]</span>
+  <span class="comment"># convert to numeric</span>
+  <span class="comment"># The fips should stay as character... so how to distinguish fips from data?</span>
+  <span class="comment"># I think all of the data have numbers in the names, the fips do not</span>
+  <span class="comment">#  Example: field names of B01001_001E vs state</span>
+  <span class="keyword">if</span><span class="paren">(</span><span class="identifier">numeric</span><span class="operator">==</span><span class="literal">TRUE</span><span class="paren">)</span><span class="paren">{</span>
+    <span class="identifier">value_cols</span> <span class="operator">&lt;-</span> <span class="identifier">grep</span><span class="paren">(</span><span class="string">"[0-9]"</span>, <span class="identifier">names</span><span class="paren">(</span><span class="identifier">dat_df</span><span class="paren">)</span>, <span class="identifier">value</span><span class="operator">=</span><span class="literal">TRUE</span><span class="paren">)</span>
+    <span class="keyword">for</span><span class="paren">(</span><span class="identifier">col</span> <span class="keyword">in</span> <span class="identifier">value_cols</span><span class="paren">)</span> <span class="identifier">dat_df</span><span class="paren">[</span>,<span class="identifier">col</span><span class="paren">]</span> <span class="operator">&lt;-</span> <span class="identifier">as.numeric</span><span class="paren">(</span><span class="identifier">as.character</span><span class="paren">(</span><span class="identifier">dat_df</span><span class="paren">[</span>,<span class="identifier">col</span><span class="paren">]</span><span class="paren">)</span><span class="paren">)</span>
+  <span class="paren">}</span>
+  <span class="keyword">return</span><span class="paren">(</span><span class="identifier">dat_df</span><span class="paren">)</span>
+<span class="paren">}</span>
+
+<span class="identifier">vecToChunk</span> <span class="operator">&lt;-</span> <span class="keyword">function</span><span class="paren">(</span><span class="identifier">x</span>, <span class="identifier">max</span><span class="operator">=</span><span class="number">50</span><span class="paren">)</span><span class="paren">{</span>
+  <span class="identifier">s</span> <span class="operator">&lt;-</span> <span class="identifier">seq_along</span><span class="paren">(</span><span class="identifier">x</span><span class="paren">)</span>
+  <span class="identifier">x1</span> <span class="operator">&lt;-</span> <span class="identifier">split</span><span class="paren">(</span><span class="identifier">x</span>, <span class="identifier">ceiling</span><span class="paren">(</span><span class="identifier">s</span><span class="operator">/</span><span class="identifier">max</span><span class="paren">)</span><span class="paren">)</span>
+  <span class="keyword">return</span><span class="paren">(</span><span class="identifier">x1</span><span class="paren">)</span>
+<span class="paren">}</span>
+</code></pre>
+
+<h3>Usage examples</h3>
+
+<h4>Enter your api key here</h4>
+
+<pre><code class="r"><span class="comment"># Uncomment the next line and enter your key</span>
+
+<span class="comment"># key = 'your key here'</span>
+</code></pre>
+
+<h4>Get all place populations in the US from the 2010 Census.</h4>
+
+<pre><code class="r"><span class="identifier">sf1_2010_api</span> <span class="operator">&lt;-</span> <span class="string">'http://api.census.gov/data/2010/sf1?'</span>
+<span class="comment"># Get all place pops for the US</span>
+<span class="identifier">us_places</span> <span class="operator">&lt;-</span> <span class="identifier">getCensusApi</span><span class="paren">(</span><span class="identifier">sf1_2010_api</span>, <span class="identifier">key</span><span class="operator">=</span><span class="identifier">key</span>, <span class="identifier">vars</span><span class="operator">=</span><span class="identifier">c</span><span class="paren">(</span><span class="string">"P0010001"</span><span class="paren">)</span>, <span class="identifier">region</span><span class="operator">=</span><span class="string">"for=place:*"</span><span class="paren">)</span>
+<span class="identifier">head</span><span class="paren">(</span><span class="identifier">us_places</span><span class="paren">)</span>
+</code></pre>
+
+<pre><code>##   state place P0010001
+## 1    01 00100      192
+## 2    01 00124     2688
+## 3    01 00460     4522
+## 4    01 00484      758
+## 5    01 00676      356
+## 6    01 00820    30352
+</code></pre>
+
+<h4>An example involving more than 50 variables</h4>
+
+<pre><code class="r"><span class="comment"># Get table B04001 from the 2007-2011 ACS.  There are aver 109 vars here (twice that if you include MOEs!).  Pull the data for all places in California</span>
+<span class="identifier">vars</span> <span class="operator">&lt;-</span> <span class="identifier">paste</span><span class="paren">(</span><span class="string">'B04001_'</span>, <span class="identifier">sprintf</span><span class="paren">(</span><span class="string">'%03i'</span>, <span class="identifier">seq</span><span class="paren">(</span><span class="number">1</span>, <span class="number">109</span><span class="paren">)</span><span class="paren">)</span>, <span class="string">'E'</span>, <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span><span class="paren">)</span>
+<span class="identifier">acs_07_11_url</span> <span class="operator">&lt;-</span> <span class="string">'http://api.census.gov/data/2011/acs5?'</span>
+<span class="identifier">us_places_ancestry</span> <span class="operator">&lt;-</span> <span class="identifier">getCensusApi</span><span class="paren">(</span><span class="identifier">acs_07_11_url</span>, <span class="identifier">key</span><span class="operator">=</span><span class="identifier">key</span>, <span class="identifier">vars</span><span class="operator">=</span><span class="identifier">vars</span>, <span class="identifier">region</span><span class="operator">=</span><span class="string">"for=place:*&amp;in=state:06"</span><span class="paren">)</span>
+<span class="identifier">head</span><span class="paren">(</span><span class="identifier">us_places_ancestry</span><span class="paren">)</span>
+</code></pre>
+
+<pre><code>##   state place B04001_001E B04001_002E B04001_003E B04001_004E B04001_005E
+## 1    06 00135        1431           0           0           0          31
+## 2    06 00156         387           0           0           0           0
+## 3    06 00212        7138           0           0           4         316
+## 4    06 00296       30670           0           0           0         619
+## 5    06 00310         418           0           0           0           0
+## 6    06 00394       20353          27           0           0         907
+##   B04001_006E B04001_007E B04001_008E B04001_009E B04001_010E B04001_011E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0           0           0           0
+## 4          22           0           0           0          14           0
+## 5           0           0           0           0           0           0
+## 6         299           0          31         116          51           0
+##   B04001_012E B04001_013E B04001_014E B04001_015E B04001_016E B04001_017E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0           0          44           0
+## 4           0           0           0           8         124           0
+## 5           0           0           0           0           0           0
+## 6          18           0          23          60          87           0
+##   B04001_018E B04001_019E B04001_020E B04001_021E B04001_022E B04001_023E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0          27           0           0           0          14
+## 4           0           0           0           0           0           8
+## 5           0           0           0           0           0           0
+## 6           0          40          11          55           0          38
+##   B04001_024E B04001_025E B04001_026E B04001_027E B04001_028E B04001_029E
+## 1           0           0           0           0           0          16
+## 2           0           0           0           0           0           0
+## 3           0           0         190           0           0           0
+## 4           0           0           7           0           0           0
+## 5           0           0           0           0           0           0
+## 6          19           0          81           0           0          11
+##   B04001_030E B04001_031E B04001_032E B04001_033E B04001_034E B04001_035E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0          72         118           0
+## 4           0           0           0           0           0           0
+## 5           0           0           0           0           0           0
+## 6           0         100          25         170         149         634
+##   B04001_036E B04001_037E B04001_038E B04001_039E B04001_040E B04001_041E
+## 1         193           0          14           0          25           0
+## 2           0           0           0           0           0           0
+## 3         502           0         198          45         176          29
+## 4         285           0          88           0          62          96
+## 5          77           0           0           0          14           0
+## 6         874           0         534          22         207          49
+##   B04001_042E B04001_043E B04001_044E B04001_045E B04001_046E B04001_047E
+## 1          56           0           0           0           0          32
+## 2           0           0           0           0           0           0
+## 3        1138           0          64           0          29           0
+## 4         657           0           0           0          24           0
+## 5         169           0           0           0           0           0
+## 6        1963           0          65           0         193           0
+##   B04001_048E B04001_049E B04001_050E B04001_051E B04001_052E B04001_053E
+## 1          72         250           0          57          41           0
+## 2           0           0           0           0           0           0
+## 3           0         532           0         587           0           8
+## 4           0         812           0         424           0           0
+## 5           0          49           0           6           0           0
+## 6         211        1722         236        1053           0         112
+##   B04001_054E B04001_055E B04001_056E B04001_057E B04001_058E B04001_059E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0           0         132          80
+## 4           0           0           0           0           0         460
+## 5           0           0           0           0           0           0
+## 6           0           0           0           0         189         136
+##   B04001_060E B04001_061E B04001_062E B04001_063E B04001_064E B04001_065E
+## 1           0          21          15           0          12          15
+## 2           0           0          21           0           0           0
+## 3           0         139          21          33          52          36
+## 4           0         651           0           0          28         113
+## 5           0           0           0           0           0          15
+## 6           0         707          29          65        1506          14
+##   B04001_066E B04001_067E B04001_068E B04001_069E B04001_070E B04001_071E
+## 1           0          62           0           0          14           0
+## 2           0           0           0           0           0           0
+## 3         120         234           0           0           0          13
+## 4         111          59           0           0          18           0
+## 5           0          29           0           0           0           0
+## 6         251         336           0           0           0           0
+##   B04001_072E B04001_073E B04001_074E B04001_075E B04001_076E B04001_077E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0          35           0           0           0           0
+## 4           0         279           0           0           0           0
+## 5           0           0           0           0           0           0
+## 6           0          56           0           0           0           0
+##   B04001_078E B04001_079E B04001_080E B04001_081E B04001_082E B04001_083E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0           0           0           0
+## 4           0         177           0           0           0           0
+## 5           0           0           0           0           0           0
+## 6           0           0           0           0           0          28
+##   B04001_084E B04001_085E B04001_086E B04001_087E B04001_088E B04001_089E
+## 1           0           0           0           0           0          60
+## 2           0           0           0           0           0           9
+## 3           0           0           0          35           0         127
+## 4           0           0           0         102           0          53
+## 5           0           0           0           0           0           0
+## 6          28           0           0           0           0         430
+##   B04001_090E B04001_091E B04001_092E B04001_093E B04001_094E B04001_095E
+## 1           0           0          23           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0          20           0           0
+## 4           0           0          65           0         140           0
+## 5           0           0           0           0           0           0
+## 6          76          20         143          11           0           0
+##   B04001_096E B04001_097E B04001_098E B04001_099E B04001_100E B04001_101E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0           0           0           0
+## 4           0         102           0           0          31           0
+## 5           0           0           0           0           0           0
+## 6           0           0           0           0           0           0
+##   B04001_102E B04001_103E B04001_104E B04001_105E B04001_106E B04001_107E
+## 1           0           0           0           0           0           0
+## 2           0           0           0           0           0           0
+## 3           0           0           0           0           0           0
+## 4           7           0           0           0           0           0
+## 5           0           0           0           0           0           0
+## 6           0           0           0           0           0           0
+##   B04001_108E B04001_109E
+## 1         350          72
+## 2         357           0
+## 3        1535         468
+## 4       23147        2318
+## 5          23          36
+## 6        5081        1409
+</code></pre>
+
+<h3>An example requiring a loop through regions</h3>
+
+<p>Here, we will extract tract level data from many counties.  You can only request tract data one county at a time, so we'll loop through it.</p>
+
+<h1>Create a list of counties to loop through.  I have both county names and fips codes here.  Only the fips codes are used.  The names are just for clarity.</h1>
+
+<pre><code class="r"><span class="identifier">study_area</span> <span class="operator">&lt;-</span> <span class="identifier">data.frame</span><span class="paren">(</span><span class="identifier">county</span> <span class="operator">=</span> <span class="identifier">c</span><span class="paren">(</span><span class="string">'Cannon'</span>, <span class="string">'Cheatham'</span>, <span class="string">'Davidson'</span>, <span class="string">'Dickson'</span>, <span class="string">'Hickman'</span>, <span class="string">'Macon'</span>, <span class="string">'Maury'</span>, <span class="string">'Robertson'</span>, <span class="string">'Rutherford'</span>, <span class="string">'Smith'</span>, <span class="string">'Sumner'</span>, <span class="string">'Trousdale'</span>, <span class="string">'Williamson'</span>, <span class="string">'Wilson'</span><span class="paren">)</span>,
+                         <span class="identifier">fips</span> <span class="operator">=</span> <span class="identifier">c</span><span class="paren">(</span><span class="string">'015'</span>, <span class="string">'021'</span>, <span class="string">'037'</span>, <span class="string">'043'</span>, <span class="string">'081'</span>, <span class="string">'111'</span>, <span class="string">'119'</span>, 
+                                  <span class="string">'147'</span>, <span class="string">'149'</span>, <span class="string">'159'</span>, <span class="string">'165'</span>, <span class="string">'169'</span>, <span class="string">'187'</span>, <span class="string">'189'</span><span class="paren">)</span>,
+                         <span class="identifier">stringsAsFactors</span><span class="operator">=</span><span class="literal">FALSE</span><span class="paren">)</span>
+</code></pre>
+
+<p>Create a list of variables to extract.</p>
+
+<pre><code class="r"><span class="identifier">vars</span> <span class="operator">&lt;-</span> <span class="identifier">c</span><span class="paren">(</span><span class="string">'B00001_001E'</span>, <span class="string">'B00002_001E'</span>, <span class="string">'B01001_001E'</span>, <span class="string">'B01001I_001E'</span><span class="paren">)</span>
+</code></pre>
+
+<p>Now, loop through the counties</p>
+
+<pre><code class="r"><span class="comment"># Create an empty data.frame to hold the results in:</span>
+<span class="identifier">df</span> <span class="operator">&lt;-</span> <span class="literal">NULL</span>
+<span class="keyword">for</span><span class="paren">(</span><span class="identifier">cty</span> <span class="keyword">in</span> <span class="identifier">study_area</span><span class="operator">$</span><span class="identifier">fips</span><span class="paren">)</span><span class="paren">{</span><span class="comment"># For each county</span>
+  <span class="comment">#Construct the regions part of the API Call</span>
+  <span class="identifier">region</span> <span class="operator">=</span> <span class="identifier">paste</span><span class="paren">(</span><span class="string">"for=tract:*&amp;in=state:47+county:"</span>, <span class="identifier">cty</span>, <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span><span class="paren">)</span>
+  <span class="comment"># Pull data</span>
+  <span class="identifier">temp.df</span> <span class="operator">&lt;-</span> <span class="identifier">getCensusApi</span><span class="paren">(</span><span class="identifier">acs_07_11_url</span>, <span class="identifier">key</span><span class="operator">=</span><span class="identifier">key</span>, <span class="identifier">vars</span><span class="operator">=</span><span class="identifier">vars</span>, <span class="identifier">region</span><span class="operator">=</span><span class="identifier">region</span><span class="paren">)</span>
+  <span class="identifier">df</span> <span class="operator">&lt;-</span> <span class="identifier">rbind</span><span class="paren">(</span><span class="identifier">df</span>, <span class="identifier">temp.df</span><span class="paren">)</span>
+<span class="paren">}</span>
+</code></pre>
+
+<pre><code>## Warning: NAs introduced by coercion
+## Warning: NAs introduced by coercion
+</code></pre>
+
+<pre><code class="r"><span class="identifier">rm</span><span class="paren">(</span><span class="identifier">region</span>,<span class="identifier">temp.df</span><span class="paren">)</span>
+<span class="identifier">head</span><span class="paren">(</span><span class="identifier">df</span><span class="paren">)</span>
+</code></pre>
+
+<pre><code>##   state county  tract B00001_001E B00002_001E B01001_001E B01001I_001E
+## 1    47    015 960100         413         179        3690           11
+## 2    47    015 960200         607         259        6623          103
+## 3    47    015 960300         269         111        3415          104
+## 4    47    021 070102         310         124        4019           74
+## 5    47    021 070103         194          80        3632          171
+## 6    47    021 070104         325         134        5270           78
+</code></pre>
+
+<p>That produced some NAs for county 149, tract 014500.  I don't know what's up there.  Maybe someone else can do a good turn and look into that?</p>
+
+<h3>Dynamically create a loop</h3>
+
+<p>I often encounter problems where I want block group data for an entire county, or for many counties.  The API only lets you pull block groups for one block at a time.  The solution to this is to do a simple API pull at the tract level, pull out the tract names, and then loop through each tract, pulling out the needed block group data.</p>
+
+<p>Here's an example to pull block group pops from Davidson County in Tennessee.
+You'll see the loop is very similar to the last example.  The only difference is that we place an intermediate API call in order to generate the list of tracts.</p>
+
+<pre><code class="r"><span class="identifier">vars</span><span class="operator">=</span><span class="string">"B01001_001E"</span>
+<span class="comment"># Set up the tract level API call</span>
+<span class="identifier">region_tract</span> <span class="operator">&lt;-</span> <span class="string">'for=tract:*&amp;in=state:47+county:037'</span>
+<span class="identifier">tract_df</span> <span class="operator">&lt;-</span> <span class="identifier">getCensusApi</span><span class="paren">(</span><span class="identifier">acs_07_11_url</span>, <span class="identifier">key</span><span class="operator">=</span><span class="identifier">key</span>, <span class="identifier">vars</span><span class="operator">=</span><span class="identifier">vars</span>, <span class="identifier">region</span><span class="operator">=</span><span class="identifier">region_tract</span><span class="paren">)</span>
+<span class="identifier">tract_list</span> <span class="operator">&lt;-</span> <span class="identifier">tract_df</span><span class="operator">$</span><span class="identifier">tract</span>
+<span class="identifier">df</span> <span class="operator">&lt;-</span> <span class="literal">NULL</span>
+<span class="keyword">for</span><span class="paren">(</span><span class="identifier">t</span> <span class="keyword">in</span> <span class="identifier">tract_list</span><span class="paren">)</span><span class="paren">{</span><span class="comment"># For each tract</span>
+  <span class="comment">#Construct the regions part of the API Call</span>
+  <span class="identifier">region</span> <span class="operator">=</span> <span class="identifier">paste</span><span class="paren">(</span><span class="string">"for=block+group:*&amp;in=state:47+county:037+tract:"</span>, <span class="identifier">t</span>, <span class="identifier">sep</span><span class="operator">=</span><span class="string">''</span><span class="paren">)</span>
+  <span class="comment"># Pull data</span>
+  <span class="identifier">temp.df</span> <span class="operator">&lt;-</span> <span class="identifier">getCensusApi</span><span class="paren">(</span><span class="identifier">acs_07_11_url</span>, <span class="identifier">key</span><span class="operator">=</span><span class="identifier">key</span>, <span class="identifier">vars</span><span class="operator">=</span><span class="identifier">vars</span>, <span class="identifier">region</span><span class="operator">=</span><span class="identifier">region</span><span class="paren">)</span>
+  <span class="identifier">df</span> <span class="operator">&lt;-</span> <span class="identifier">rbind</span><span class="paren">(</span><span class="identifier">df</span>, <span class="identifier">temp.df</span><span class="paren">)</span>
+<span class="paren">}</span>
+<span class="identifier">rm</span><span class="paren">(</span><span class="identifier">region</span>,<span class="identifier">temp.df</span><span class="paren">)</span>
+<span class="identifier">head</span><span class="paren">(</span><span class="identifier">df</span><span class="paren">)</span>
+</code></pre>
+
+<pre><code>##   state county  tract block group B01001_001E
+## 1    47    037 010103           1        1111
+## 2    47    037 010103           2        1146
+## 3    47    037 010104           1        1778
+## 4    47    037 010104           2        1653
+## 5    47    037 010105           1         770
+## 6    47    037 010105           2        2435
+</code></pre>
+
+
+
+
+
+</body></html>
