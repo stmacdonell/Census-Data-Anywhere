@@ -20,6 +20,7 @@ library(lwgeom)
 #This takes a shapefile, state (abbrevation, or FIPS code), and if desired a vector of county FIPS codes and
 #returns the same shapefile with Census Demographics attached
 AddCensusDemographics <- function(map,api_key,state,county=NULL){
+  load("data/StateAndCountyFIPScodes2010.RData")
 
   #make sure the state is valid
   if(!((state%in%StateAndCountyFIPScodes2010$StateAbr)|(state%in%StateAndCountyFIPScodes2010$StateFIPS))){
@@ -42,17 +43,27 @@ AddCensusDemographics <- function(map,api_key,state,county=NULL){
     }
   }
 
-  demographicvars <- c(Pop18Plus = "P0100001",
-                       Pop18PlusWhite = "P0100003",
-                       Pop18PlusBlack = "P0100004",
-                       Pop18PlusAmInd = "P0100005",
-                       Pop18PlusAsian = "P0100006",
-                       Pop18PlusNativeHawPI = "P0100007",
-                       Pop18PlusHisp = "P0110002")
+
+  #which demographic variables do I want?
+  demographicvars <- c(Pop18 = "P0100001",
+                       Pop18WH = "P0100003",
+                       Pop18BL = "P0100004",
+                       Pop18AI = "P0100005",
+                       Pop18AS = "P0100006",
+                       Pop18HPI = "P0100007",
+                       Pop18HSP = "P0110002"
+                       # ,
+                       # InstitPopWhite = "PCT020A003",
+                       # InstitPopBlack = "PCT020B003",
+                       # InstitPopAmInd = "PCT020C003",
+                       # InstitPopAsian = "PCT020D003",
+                       # InstitPopNativeHawPI = "PCT020E003",
+                       # InstitPopHisp = "PCT020H003"
+                       )
 
   blkmap <- get_decennial(geography = "block", variables = demographicvars,
                           state = state, county = county, geometry = TRUE,
-                          summary_var = NULL, output = "wide")
+                          summary_var = NULL, output = "wide",key=api_key)
 
   #get a copy of only the spatial data
   blkmapFull <- blkmap
@@ -66,7 +77,7 @@ AddCensusDemographics <- function(map,api_key,state,county=NULL){
   #which blocks intersect each precinct
   #gIntersection and raster::intersection take way to long on everything
   #it is much faster to just figure out what intersects at all, and then only intersect those
-  mapi <- st_intersects(map,blkmap,sparse = TRUE, prepared = TRUE)
+  mapi <- suppressMessages(st_intersects(map,blkmap,sparse = TRUE, prepared = TRUE))
 
   intersected.blocks <- sort(unique(unlist(mapi)))
 
