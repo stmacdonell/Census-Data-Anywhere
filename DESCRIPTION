@@ -1,11 +1,11 @@
 Package: CensusDataAnywhere
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Add U.S. Census Data to Your Shapefile (Title Case)
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
-License: What license is it under?
+Author: Scott Macdonell and Maia Woluchem
+Maintainer: Scott T. Macdonell
+Description: This package provides a function AddCensusDemographics which takes a simple features
+object and adds Census data to the polygons in that object.
+License: MIT
 Encoding: UTF-8
 LazyData: true
