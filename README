@@ -1,0 +1,5 @@
+This project provides a function which takes a simple features (sf) object (polygon shapefile in R) covering part of a U.S. state and returns that object with Census demographic data added to each polygon.
+
+The function is in R/AddCensusDemographics.R. Some necessary data is in data/. CensusAPI/ contains work referenced while creating this code (examples of how to access the Census API). refcode/ contains code used to test if the code is working. At the moment refcode/TestCode.R will not run locally as it refers to files not included in this repo to keep the size of the repo small. However, it provides a basic example of how to use the function AddCensusDemographics. (You may want to find some of your own shapefiles to test with before contributing.)
+
+Outstanding issues are in TODO
