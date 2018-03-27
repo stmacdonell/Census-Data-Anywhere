@@ -1,6 +1,6 @@
 -This project provides a function which takes a simple features (sf) object (polygon shapefile in R) covering part of a U.S. state and returns that object with Census demographic data added to each polygon.
 +**CensusVTD**
-+This project was a collaboration by Sarah Hugenberger, Adrianna ______, Scott Macdonell,
++This project was a collaboration by Sarah Hugenberger, Adrianna Maberry, Scott Macdonell,
 +and Maia Woluchem at the Austin MGGG hackathon. There are two parts, (1)the Shiny app which then calls
 +(2) the R script AddCensusDemographics.R (sometimes called "Scott's script") which is part of the GitHub
 +repository at https://github.com/gerrymandr/Census-Data-Anywhere
