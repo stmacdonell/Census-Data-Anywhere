@@ -4,3 +4,5 @@
 .Ruserdata
 testing/
 .DS_store
+data/cache/
+data/test/

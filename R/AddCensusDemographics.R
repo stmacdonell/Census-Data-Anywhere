@@ -13,13 +13,16 @@
 #   Check Package:             'Ctrl + Shift + E'
 #   Test Package:              'Ctrl + Shift + T'
 
-library(sf)
-library(tidycensus)
-library(lwgeom)
+#library(lwgeom)
 
 #This takes a shapefile, state (abbrevation, or FIPS code), and if desired a vector of county FIPS codes and
 #returns the same shapefile with Census Demographics attached
-AddCensusDemographics <- function(map,api_key,state,county=NULL){
+AddCensusDemographics <- function(map,year=2010,state,county=NULL,
+                                  demographicvars=NULL,api_key=NULL){
+  
+  library(sf)
+  library(tidycensus)
+  
   load("data/StateAndCountyFIPScodes2010.RData")
 
   #make sure the state is valid
@@ -42,9 +45,10 @@ AddCensusDemographics <- function(map,api_key,state,county=NULL){
       stop("Invalid County")
     }
   }
+  
 
-
-  #which demographic variables do I want?
+  #Set demographic variables if null
+  if(is.null(demographicvars)){
   demographicvars <- c(Pop18 = "P0100001",
                        Pop18WH = "P0100003",
                        Pop18BL = "P0100004",
@@ -60,10 +64,17 @@ AddCensusDemographics <- function(map,api_key,state,county=NULL){
                        # InstitPopNativeHawPI = "PCT020E003",
                        # InstitPopHisp = "PCT020H003"
                        )
+  }
 
+  ##Need to loop through all counties
   blkmap <- get_decennial(geography = "block", variables = demographicvars,
-                          state = state, county = county, geometry = TRUE,
+                          year=year, state = state, county = county, geometry = TRUE,
                           summary_var = NULL, output = "wide",key=api_key)
+  
+  # blkmap <- get_decennial(geography = "block", variables = demographicvars,
+  #                         state = state, geometry = TRUE, output = "wide")
+  
+  
 
   #get a copy of only the spatial data
   blkmapFull <- blkmap
@@ -71,7 +82,7 @@ AddCensusDemographics <- function(map,api_key,state,county=NULL){
   mapFull <- map
   map <- st_geometry(map)
 
-  #put shapefile in same projection
+  #put shapefiles in same projection
   map <- st_transform(map,st_crs(blkmap))
 
   #which blocks intersect each precinct

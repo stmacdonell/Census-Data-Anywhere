@@ -6,18 +6,22 @@ dir.create("data/cache/ArlingtonMA/")
 dir.create("data/test")
 
 #set api_key
-api_key <-"d9174b06d5ec03a39d5f89f411614913e72556e6"
+#api_key <-"d9174b06d5ec03a39d5f89f411614913e72556e6"
 
 #read the map
-unzip("shiny/TestingData/ArlingtonMA_VoterPrecinct.zip",exdir = "data/cache/ArlingtonMA/")
+unzip("data/ArlingtonMA_VoterPrecinct.zip",exdir = "data/cache/ArlingtonMA/")
 map <- st_read("data/cache/ArlingtonMA/ArlingtonMA_VoterPrecinct.shp")
 
 #set parameters
 state <- 25
-county <- 17
+county <- NULL
+demographicvars <- NULL
+api_key <- NULL
+year <- 2010
 
 #add census demographics
-MapWithDemographics <- AddCensusDemographics(map,api_key,state,county)
+#MapWithDemographics <- AddCensusDemographics(map,api_key,state,county)
+MapWithDemographics <- AddCensusDemographics(map = map,state = state,county = county)
 
 #output map
 st_write(MapWithDemographics,dsn="data/test/",layer="MapWithDemographics",driver = "ESRI Shapefile")
